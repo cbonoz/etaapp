@@ -17,7 +17,6 @@
 
     <style name="AppTheme.PopupOverlay" parent="ThemeOverlay.AppCompat.Light" />
 
-
     <style name="ListItem">
         <item name="android:minHeight">?android:attr/listPreferredItemHeight</item>
         <item name="android:paddingLeft">10dp</item>

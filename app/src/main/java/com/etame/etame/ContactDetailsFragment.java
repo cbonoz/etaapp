@@ -99,9 +99,11 @@ public class ContactDetailsFragment extends ListFragment {
 			mDisplayName.setText(mCursor.getString(mCursor.getColumnIndex(Phone.DISPLAY_NAME)));
 		}
 
-		name = Phone.DISPLAY_NAME;
-		phoneNumber = Phone.NUMBER;
-		
+		name = mCursor.getString(mCursor.getColumnIndex(Phone.DISPLAY_NAME));
+		phoneNumber = mCursor.getString(mCursor.getColumnIndex(Phone.NUMBER));
+		//TODO :: Remove This
+		Log.i("CONTACT::", name+", "+phoneNumber);
+
 		ListAdapter adapter = new PhoneNumbersAdapter(this.getActivity(),
 				R.layout.list_item_phone_number, mCursor,
 				new String[] {Phone.TYPE, Phone.NUMBER }, 

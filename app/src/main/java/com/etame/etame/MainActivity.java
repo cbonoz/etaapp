@@ -1,8 +1,11 @@
 package com.etame.etame;
 
+import android.Manifest;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.location.Location;
 import android.os.Bundle;
+import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v7.app.ActionBar;
@@ -10,6 +13,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.widget.Toast;
 
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
@@ -19,12 +23,12 @@ import com.google.android.gms.location.LocationListener;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
 
-public class MainActivity extends AppCompatActivity  implements OnContactSelectedListener, GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener, LocationListener {
-    public static final String SELECTED_CONTACT_ID 	= "contact_id";
-    public static final String KEY_PHONE_NUMBER 	= "phone_number";
-    public static final String KEY_CONTACT_NAME 	= "contact_name";
+public class MainActivity extends AppCompatActivity implements OnContactSelectedListener, GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener, LocationListener {
+    public static final String SELECTED_CONTACT_ID = "contact_id";
+    public static final String KEY_PHONE_NUMBER = "phone_number";
+    public static final String KEY_CONTACT_NAME = "contact_name";
     private static final String TAG = "MainActivity";
-
+    private static final int MY_PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION = 1;
     protected GoogleApiClient mGoogleApiClient;
     private Location currentLocation;
 
@@ -37,9 +41,9 @@ public class MainActivity extends AppCompatActivity  implements OnContactSelecte
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_contacts);
 
-        FragmentManager fragmentManager 	= this.getSupportFragmentManager();
+        FragmentManager fragmentManager = this.getSupportFragmentManager();
         FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
-        ContactsListFragment 	fragment 			= new ContactsListFragment();
+        ContactsListFragment fragment = new ContactsListFragment();
 
         fragmentTransaction.replace(R.id.fragment_container, fragment);
         fragmentTransaction.commit();
@@ -50,8 +54,50 @@ public class MainActivity extends AppCompatActivity  implements OnContactSelecte
             actionBar.setTitle("Select contact");
         }
 
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            // TODO: Consider calling
+            //    ActivityCompat#requestPermissions
+            // here to request the missing permissions, and then overriding
+            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
+            //                                          int[] grantResults)
+            // to handle the case where the user grants the permission. See the documentation
+            // for ActivityCompat#requestPermissions for more details.
+
+            ActivityCompat.requestPermissions(this,
+                    new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, MY_PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION);
+            return;
+        }
         buildGoogleApiClient();
         mGoogleApiClient.connect();
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode,
+                                           String permissions[], int[] grantResults) {
+        switch (requestCode) {
+            case MY_PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION: {
+                // If request is cancelled, the result arrays are empty.
+                if (grantResults.length > 0
+                        && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+
+                    buildGoogleApiClient();
+                    mGoogleApiClient.connect();
+
+                } else {
+
+                    Toast.makeText(this, "ETAme requires Contacts permission", Toast.LENGTH_LONG).show();
+                    onDestroy();
+                    // permission denied, boo! Disable the
+                    // functionality that depends on this permission.
+                }
+                return;
+            }
+
+            // other 'case' lines to check for other
+            // permissions this app might request
+        }
+
+        Log.i("Requestcode", requestCode + "");
     }
 
     @Override
@@ -67,9 +113,9 @@ public class MainActivity extends AppCompatActivity  implements OnContactSelecte
 
     }
 
-        /**
-         * Builds a GoogleApiClient. Uses the addApi() method to request the LocationServices API.
-         */
+    /**
+     * Builds a GoogleApiClient. Uses the addApi() method to request the LocationServices API.
+     */
     protected synchronized void buildGoogleApiClient() {
         mGoogleApiClient = new GoogleApiClient.Builder(this)
                 .addConnectionCallbacks(this)
@@ -88,12 +134,12 @@ public class MainActivity extends AppCompatActivity  implements OnContactSelecte
 		/* Now that we know which Contact was selected we can go to the details fragment */
 
         ContactDetailsFragment detailsFragment = new ContactDetailsFragment();
-        Bundle 		args 			= new Bundle();
+        Bundle args = new Bundle();
         args.putLong(MainActivity.SELECTED_CONTACT_ID, contactId);
-        if (currentLocation!=null) {
+        if (currentLocation != null) {
             args.putDouble("Lat", currentLocation.getLatitude());
             args.putDouble("Long", currentLocation.getLongitude());
-         } else {
+        } else {
             //no location found (default values)
             args.putDouble("Lat", 0);
             args.putDouble("Long", 0);
@@ -153,11 +199,11 @@ public class MainActivity extends AppCompatActivity  implements OnContactSelecte
     //Location
 
 
-
     //Location
 
     private static final Integer UPDATE_INTERVAL_MS = 1000 * 60;
     private static final Integer FASTEST_INTERVAL_MS = UPDATE_INTERVAL_MS;
+
     /**
      * Runs when a GoogleApiClient object successfully connects.
      */
@@ -168,6 +214,16 @@ public class MainActivity extends AppCompatActivity  implements OnContactSelecte
                 .setInterval(UPDATE_INTERVAL_MS)
                 .setFastestInterval(FASTEST_INTERVAL_MS);
 
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            // TODO: Consider calling
+            //    ActivityCompat#requestPermissions
+            // here to request the missing permissions, and then overriding
+            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
+            //                                          int[] grantResults)
+            // to handle the case where the user grants the permission. See the documentation
+            // for ActivityCompat#requestPermissions for more details.
+            return;
+        }
         LocationServices.FusedLocationApi
                 .requestLocationUpdates(mGoogleApiClient, locationRequest, this)
                 .setResultCallback(new ResultCallback<Status>() {
@@ -192,6 +248,7 @@ public class MainActivity extends AppCompatActivity  implements OnContactSelecte
         // applications that do not require a fine-grained location and that do not need location
         // updates. Gets the best and most recent location currently available, which may be null
         // in rare cases when a location is not available.
+
         currentLocation = LocationServices.FusedLocationApi.getLastLocation(mGoogleApiClient);
 //        if (ClientPaths.currentLocation==null) {
 //            Toast.makeText(this, "No Location Detected", Toast.LENGTH_SHORT).show();
